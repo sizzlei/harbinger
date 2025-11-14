@@ -1,0 +1,202 @@
+<h2 class="mb-4 d-inline-block">공지 스케줄 관리</h2>
+
+<button type="button" class="btn btn-primary btn-sm ms-3" data-bs-toggle="modal" data-bs-target="#createNoticeModal">
+    + 새 공지 등록
+</button>
+
+{{if .FlashSuccess}}
+    <div class="alert alert-success mt-3" role="alert">
+        {{.FlashSuccess}}
+    </div>
+{{end}}
+{{if .FlashError}}
+    <div class="alert alert-danger mt-3" role="alert">
+        {{.FlashError}}
+    </div>
+{{end}}
+
+<div class="row g-4 mt-1">
+    <div class="col-lg-12">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h3 class="h5 card-title mb-3">활성 공지 목록</h3>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <!-- <th scope="col">ID</th> -->
+                                <th scope="col">공지 제목</th>
+                                <th scope="col">작성자</th>
+                                <th scope="col">시작일</th>
+                                <th scope="col">종료일</th>
+                                <th scope="col">공지 시간</th>
+                                <th scope="col">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .Notices}}
+                                <tr>
+                                    <!-- <td>{{.ID}}</td> -->
+                                    <td>{{.NoticeTitle}}</td>
+                                    <td>{{.CreatedByName}}</td> 
+                                    <td>{{.NoticeStartDe.Format "2006-01-02"}}</td> 
+                                    <td>{{.NoticeEndDe.Format "2006-01-02"}}</td>
+                                    <td>{{slice .NoticeTime 0 5}}</td> 
+                                    <td class="action-cell">
+                                        <a href="/notices/edit/{{.ID}}" class="btn btn-outline-primary btn-sm">수정</a>
+                                        <form action="/notices/delete/{{.ID}}" method="POST" onsubmit="return confirm('정말 이 공지(ID: {{.ID}})를 삭제하시겠습니까?');" class="inline-form">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {{else}}
+                                <tr><td colspan="7" class="text-center text-muted p-4">활성화된 공지가 없습니다.</td></tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="createNoticeModal" tabindex="-1" aria-labelledby="createNoticeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="createNoticeModalLabel">새 공지 스케줄 등록</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            
+            <div class="modal-body">
+                <form action="/notices" method="POST" id="createNoticeForm">
+                    <fieldset class="mb-4 p-3 border rounded">
+                        <legend class="float-none w-auto px-2 fs-6">1. 기본 정보</legend>
+                        <div class="mb-3">
+                            <label for="notice_title" class="form-label">공지 제목 (식별용):</label>
+                            <input type="text" id="notice_title" name="notice_title" class="form-control" required>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4 p-3 border rounded">
+                        <legend class="float-none w-auto px-2 fs-6">2. 발송 대상 및 템플릿</legend>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="channel_group_id_modal" class="form-label">채널 그룹:</label>
+                                <select id="channel_group_id_modal" name="channel_group_id" class="form-select" required>
+                                    <option value="">-- 채널 그룹 선택 --</option>
+                                    {{range .FormData.ChannelGroups}}
+                                        <option value="{{.ID}}">{{.ChannelGroupName}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="template_id_modal" class="form-label">템플릿:</label>
+                                <select id="template_id_modal" name="template_id" class="form-select" required>
+                                    <option value="">-- 템플릿 선택 --</option>
+                                    {{range .FormData.Templates}}
+                                        <option value="{{.ID}}">{{.TemplateName}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="slackbot_id_modal" class="form-label">발송 봇:</label>
+                                <select id="slackbot_id_modal" name="slackbot_id" class="form-select" required>
+                                    <option value="">-- 발송 봇 선택 --</option>
+                                    {{range .FormData.Slackbots}}
+                                        <option value="{{.ID}}">{{if .BotName}}{{.BotName}}{{else}}봇 이름 미정 (ID: {{.ID}}){{end}}</option>
+                                    {{end}}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="message_type_modal" class="form-label">발송 방식:</label>
+                                <select id="message_type_modal" name="message_type" class="form-select" required>
+                                    <option value="PLAIN">Plain Message (템플릿 무시)</option>
+                                    <option value="ATTACHMENT">Attachment (Blocks)</option>
+                                </select>
+                            </div>
+                             <div class="mb-3">
+                                <div class="alert alert-light" role="alert">
+                                    <ul>
+                                        <li>긴 내용을 한번에 공지하려면 Plan Text가 효율적 입니다. </li>
+                                        <li>Plain Message는 템플릿을 무시합니다.</li>
+                                        <li>채널 그룹에 맵핑된 채널에 사용자가 선택한 Bot이 참여하고 있는 지 확인해야합니다.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4 p-3 border rounded">
+                        <legend class="float-none w-auto px-2 fs-6">3. 발송 스케줄</legend>
+                        <div class="row g-3">
+                            <div class="col-md-6 mb-3">
+                                <label for="notice_start_de_modal" class="form-label">공지 시작일:</label>
+                                <input type="date" id="notice_start_de_modal" name="notice_start_de" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="notice_end_de_modal" class="form-label">공지 종료일:</label>
+                                <input type="date" id="notice_end_de_modal" name="notice_end_de" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="notice_time_modal" class="form-label">공지 시간 (매일):</label>
+                                <input type="time" id="notice_time_modal" name="notice_time" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="notice_interval_modal" class="form-label">공지 간격 (일):</label>
+                                <input type="number" id="notice_interval_modal" name="notice_interval" class="form-control" value="1" min="1" required>
+                                <p class="form-text mb-0">
+                                    (예: '1' = 매일, '3' = 3일 간격)
+                                </p>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <fieldset class="mb-4 p-3 border rounded">
+                        <legend class="float-none w-auto px-2 fs-6">4. 템플릿 내용 (변수)</legend>
+                        <p class="form-text">
+                            템플릿의 <code>&lt;content&gt;</code>, <code>&lt;refer&gt;</code>에 들어갈 내용입니다.
+                        </p>
+                        <div class="mb-3">
+                            <label for="content_title_modal" class="form-label">제목 :</label>
+                            <input type="text" id="content_title_modal" name="content_title" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label for="content_body_modal" class="form-label">본문 (<code>&lt;content&gt;</code>):</label>
+                            <textarea id="content_body_modal" name="content_body" class="form-control" rows="5"></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <div class="alert alert-warning" role="alert">
+                                Markdown Editor는 실제 Slack 문법과 차이가 있을 수 있습니다. 
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="content_refer_modal" class="form-label">참고 (<code>&lt;refer&gt;</code>):</label>
+                            <input type="text" id="content_refer_modal" name="content_refer" class="form-control">
+                        </div>
+                    </fieldset>
+                    
+                    <fieldset class="mb-4 p-3 border rounded">
+                        <legend class="float-none w-auto px-2 fs-6">5. 멘션 옵션</legend>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="here_yn_modal" name="here_yn" value="true">
+                            <label class="form-check-label" for="here_yn_modal">@here (현재 온라인 사용자) 호출</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="checkbox" id="channel_yn_modal" name="channel_yn" value="true">
+                            <label class="form-check-label" for="channel_yn_modal">@channel (채널 전체 사용자) 호출</label>
+                        </div>
+                    </fieldset>
+                </form> 
+            </div> 
+            
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+                <button type="submit" class="btn btn-primary" form="createNoticeForm">공지 스케줄 등록</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/public/js/notice_editor.js"></script>

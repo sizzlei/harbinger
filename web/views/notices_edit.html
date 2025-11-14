@@ -1,0 +1,150 @@
+
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0 d-inline-block">공지 스케줄 수정 (ID: {{.Notice.ID}})</h2>
+    <div class="form-actions">
+        <form action="/notices/test/{{.Notice.ID}}" method="POST" class="inline-form" 
+              onsubmit="return confirm('저장되지 않은 내용은 테스트 발송에 반영되지 않습니다.\n\n먼저 [공지 스케줄 수정] 버튼을 눌러 저장했는지 확인하세요.\n\n테스트 발송을 진행하시겠습니까?');">
+             <button type="submit" class="btn btn-outline-info">테스트 발송 (본인 DM)</button>
+        </form>
+        <a href="/notices" class="btn btn-secondary ms-2">목록으로</a>
+    </div>
+</div>
+{{if .FlashSuccess}}
+    <div class="alert alert-success mt-3" role="alert">
+        {{.FlashSuccess}}
+    </div>
+    {{end}}
+    {{if .FlashError}}
+        <div class="alert alert-danger mt-3" role="alert">
+            {{.FlashError}}
+        </div>
+    {{end}}
+
+<div class="card shadow-sm border-0">
+    <div class="card-body p-4">
+        <form action="/notices/edit/{{.Notice.ID}}" method="POST" id="editNoticeForm" class="form-complex">
+            
+            <fieldset class="mb-4 p-3 border rounded">
+                <legend class="float-none w-auto px-2 fs-6">1. 기본 정보</legend>
+                <div class="mb-3">
+                    <label for="notice_title" class="form-label">공지 제목 (식별용):</label>
+                    <input type="text" id="notice_title" name="notice_title" class="form-control" required value="{{.Notice.NoticeTitle}}">
+                </div>
+            </fieldset>
+
+            <fieldset class="mb-4 p-3 border rounded">
+                <legend class="float-none w-auto px-2 fs-6">2. 발송 대상 및 템플릿</legend>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label for="channel_group_id_modal" class="form-label">채널 그룹:</label>
+                        <select id="channel_group_id_modal" name="channel_group_id" class="form-select" required>
+                            <option value="">-- 채널 그룹 선택 --</option>
+                            {{range .FormData.ChannelGroups}}
+                                <option value="{{.ID}}" {{if eq .ID $.Notice.ChannelGroupID}}selected{{end}}>
+                                    {{.ChannelGroupName}}
+                                </option>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="template_id_modal" class="form-label">템플릿:</label>
+                        <select id="template_id_modal" name="template_id" class="form-select" required>
+                            <option value="">-- 템플릿 선택 --</option>
+                            {{range .FormData.Templates}}
+                                <option value="{{.ID}}" {{if eq .ID $.Notice.TemplateID}}selected{{end}}>
+                                    {{.TemplateName}}
+                                </option>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="slackbot_id_modal" class="form-label">발송 봇:</label>
+                        <select id="slackbot_id_modal" name="slackbot_id" class="form-select" required>
+                            <option value="">-- 발송 봇 선택 --</option>
+                            {{range .FormData.Slackbots}}
+                                <option value="{{.ID}}" {{if eq .ID $.Notice.SlackbotID}}selected{{end}}>
+                                    {{if .BotName}}{{.BotName}}{{else}}봇 이름 미정 (ID: {{.ID}}){{end}}
+                                </option>
+                            {{end}}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="message_type_modal" class="form-label">발송 방식:</label>
+                        <select id="message_type_modal" name="message_type" class="form-select" required>
+                            <option value="ATTACHMENT" {{if eq .Notice.MessageType "ATTACHMENT"}}selected{{end}}>Attachment (Blocks)</option>
+                            <option value="PLAIN" {{if eq .Notice.MessageType "PLAIN"}}selected{{end}}>Plain Message (일반 텍스트)</option>
+                        </select>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="mb-4 p-3 border rounded">
+                <legend class="float-none w-auto px-2 fs-6">3. 발송 스케줄</legend>
+                <div class="row g-3">
+                    <div class="col-md-6 mb-3">
+                        <label for="notice_start_de_modal" class="form-label">공지 시작일:</label>
+                        <input type="date" id="notice_start_de_modal" name="notice_start_de" class="form-control" required value="{{.Notice.NoticeStartDe.Format "2006-01-02"}}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="notice_end_de_modal" class="form-label">공지 종료일:</label>
+                        <input type="date" id="notice_end_de_modal" name="notice_end_de" class="form-control" required value="{{.Notice.NoticeEndDe.Format "2006-01-02"}}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="notice_time_modal" class="form-label">공지 시간 (매일):</label>
+                        <input type="time" id="notice_time_modal" name="notice_time" class="form-control" required value="{{slice .Notice.NoticeTime 0 5}}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="notice_interval_modal" class="form-label">공지 간격 (일):</label>
+                        <input type="number" id="notice_interval_modal" name="notice_interval" class="form-control" value="{{.Notice.NoticeInterval}}" min="1" required>
+                        <p class="form-text mb-0">
+                            (예: '1' = 매일, '3' = 3일 간격)
+                        </p>
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="mb-4 p-3 border rounded">
+                <legend class="float-none w-auto px-2 fs-6">4. 템플릿 내용 (변수)</legend>
+                <div class="mb-3">
+                    <label for="content_title" class="form-label">제목 :</label>
+                    <input type="text" id="content_title" name="content_title" class="form-control" value="{{.ContentsMap.title}}">
+                </div>
+
+                <div class="mb-3">
+                    <label for="content_body_edit" class="form-label">본문 (<code>&lt;content&gt;</code>):</label>
+                    <textarea id="content_body_edit" name="content_body" class="form-control" rows="5">{{.ContentsMap.content}}</textarea>
+                </div>
+                <div class="mb-3">
+                    <div class="alert alert-warning" role="alert">
+                        Markdown Editor는 실제 Slack 문법과 차이가 있을 수 있습니다. 
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="content_refer" class="form-label">참고 (<code>&lt;refer&gt;</code>):</label>
+                    <input type="text" id="content_refer" name="content_refer" class="form-control" value="{{.ContentsMap.refer}}">
+                </div>
+            </fieldset>
+            
+            <fieldset class="mb-4 p-3 border rounded">
+                <legend class="float-none w-auto px-2 fs-6">5. 멘션 옵션</legend>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="here_yn_modal" name="here_yn" value="true" {{if .Notice.HereYn}}checked{{end}}>
+                    <label class="form-check-label" for="here_yn_modal">@here (현재 온라인 사용자) 호출</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="channel_yn_modal" name="channel_yn" value="true" {{if .Notice.ChannelYn}}checked{{end}}>
+                    <label class="form-check-label" for="channel_yn_modal">@channel (채널 전체 사용자) 호출</label>
+                </div>
+            </fieldset>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary btn-lg">공지 스케줄 수정</button>
+            </div>
+
+        </form> 
+    </div>
+</div>
+
+<script src="/public/js/notice_editor.js"></script>

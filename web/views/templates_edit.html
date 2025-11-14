@@ -1,0 +1,47 @@
+<h2 class="mb-4">템플릿 수정 (ID: {{.Template.ID}})</h2>
+<p class="lead mb-4">
+    선택한 템플릿의 이름과 내용을 수정합니다.
+</p>
+
+{{if .FlashSuccess}}
+    <div class="alert alert-success" role="alert">
+        {{.FlashSuccess}}
+    </div>
+{{end}}
+{{if .FlashError}}
+    <div class="alert alert-danger" role="alert">
+        {{.FlashError}}
+    </div>
+{{end}}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                <form action="/templates/edit/{{.Template.ID}}" method="POST">
+                    <div class="mb-3">
+                        <label for="template_name" class="form-label">템플릿 명:</label>
+                        <input type="text" id="template_name" name="template_name" class="form-control" required value="{{.Template.TemplateName}}">
+                    </div>
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between">
+                            <label for="template_contents" class="form-label">템플릿 내용 (Slack Block Kit JSON):</label>
+                            <a href="#" id="formatJsonBtnEdit" class="btn btn-link btn-sm p-0 text-decoration-none">JSON 포매팅</a>
+                        </div>
+                        <textarea id="template_contents" name="template_contents" class="form-control" rows="15" required>{{.Template.TemplateContents}}</textarea>
+                        <p class="form-text">
+                            변수는 <code>&lt;title&gt;</code>, <code>&lt;content&gt;</code>, <code>&lt;refer&gt;</code> 등을 사용하세요.
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <a href="/templates" class="btn btn-secondary">목록으로</a>
+                        <button type="submit" class="btn btn-primary">템플릿 수정</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="/public/js/templates.js"></script>

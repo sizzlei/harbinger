@@ -1,0 +1,294 @@
+<h2 class="mb-4">채널 관리</h2>
+<p class="lead mb-4">
+    공지를 발송할 대상 채널 및 그룹을 관리합니다.
+</p>
+
+{{if .FlashSuccess}}
+    <div class="alert alert-success" role="alert">
+        {{.FlashSuccess}}
+    </div>
+{{end}}
+{{if .FlashError}}
+    <div class="alert alert-danger" role="alert">
+        {{.FlashError}}
+    </div>
+{{end}}
+
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h5 card-title mb-0">채널 그룹 ({{len .Data.Groups}}개)</h3>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createGroupModal">
+                        + 새 그룹 생성
+                    </button>
+                </div>
+                
+                <div class="mb-2">
+                    <input type="text" id="groupSearchInput" class="form-control form-control-sm" placeholder="그룹명으로 검색...">
+                </div>
+
+                <div class="table-responsive mb-3" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">그룹명</th>
+                                <th scope="col">작성자</th>
+                                <th scope="col" class="text-end">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="groupMappingTableBody">
+                            {{range .Data.Groups}}
+                                <tr class="group-row {{if eq .ID $.Data.SelectedGroupID}}table-primary{{end}}">
+                                    <td>{{.ID}}</td>
+                                    <td>
+                                        <div class="group-name">{{.ChannelGroupName}}</div>
+                                        <small class="text-muted">{{if .ChannelGroupDesc}}{{.ChannelGroupDesc}}{{else}}-{{end}}</small>
+                                    </td>
+                                    <td>{{.CreatedByName}}</td>
+                                    
+                                    <td style="vertical-align: middle; text-align: right; white-space: nowrap;">
+                                        <a href="/channels?group_id={{.ID}}" class="btn btn-primary btn-sm">매핑</a>
+                                        
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editGroupModal"
+                                                data-group-id="{{.ID}}"
+                                                data-group-name="{{.ChannelGroupName}}"
+                                                data-group-desc="{{if .ChannelGroupDesc}}{{.ChannelGroupDesc}}{{end}}">
+                                            수정
+                                        </button>
+                                        
+                                        <form action="/channels/groups/delete/{{.ID}}" method="POST" onsubmit="return confirm('정말 이 그룹(ID: {{.ID}})을 삭제하시겠습니까?');" style="display: inline-block; margin-left: 0.5rem;">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {{else}}
+                                <tr><td colspan="4" class="text-center text-muted p-4">등록된 채널 그룹이 없습니다.</td></tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h5 card-title mb-0">개별 채널 ({{len .Data.Details}}개)</h3>
+                    <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createDetailModal">
+                        + 새 상세 채널 등록
+                    </button>
+                </div>
+
+                {{if .Data.SelectedGroupID}}
+                    <form action="/channels/map" method="POST">
+                        <input type="hidden" name="group_id" value="{{.Data.SelectedGroupID}}">
+                        <p class="text-muted">
+                            선택된 [그룹 ID: {{.Data.SelectedGroupID}}]에 포함할 개별 채널을 선택하세요.
+                        </p>
+
+                        <div class="mb-2">
+                            <input type="text" id="channelSearchInput" class="form-control form-control-sm" placeholder="채널명으로 검색...">
+                        </div>
+
+                        <div class="table-responsive mb-3" style="max-height: 420px; overflow-y: auto;">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th scope="col" style="width: 10%;">선택</th>
+                                        <th scope="col">채널명</th>
+                                        <th scope="col">Slack 채널 ID</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="channelMappingTableBody">
+                                    {{range .Data.Details}}
+                                        <tr class="channel-row">
+                                            <td>
+                                                <div class="form-check">
+                                                    <input type="checkbox" class="form-check-input" name="detail_ids[]" value="{{.ID}}" id="detail_{{.ID}}" {{if (index $.Data.MappedDetailIDs .ID)}}checked{{end}}>
+                                                </div>
+                                            </td>
+                                            <td><label for="detail_{{.ID}}" class="channel-name">{{.ChannelName}}</label></td>
+                                            <td><label for="detail_{{.ID}}" class="text-muted">{{.ChannelID}}</label></td>
+                                        </tr>
+                                    {{else}}
+                                        <tr><td colspan="3" class="text-center text-muted p-4">등록된 개별 채널이 없습니다.</td></tr>
+                                    {{end}}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">매핑 저장</button>
+                        </div>
+                    </form>
+                {{else}}
+                    <div class="alert alert-secondary" role="alert">
+                        매핑할 채널 그룹을 왼쪽 목록에서 선택하세요.
+                    </div>
+                {{end}}
+
+                <hr class="my-4">
+                
+                <h4 class="h6 mt-4 mb-3">전체 상세 채널 (수정/삭제)</h4>
+                <div class="table-responsive mb-3" style="max-height: 250px; overflow-y: auto;">
+                    <table class="table table-sm table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>채널명</th>
+                                <th>작성자</th>
+                                <th class="text-end" style="min-width: 140px;">작업</th> 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .Data.Details}}
+                                <tr>
+                                    <td>{{.ID}}</td>
+                                    <td>{{.ChannelName}}</td>
+                                    <td>{{.CreatedByName}}</td>
+                                    <td style="vertical-align: middle; text-align: right; white-space: nowrap;">
+                                        <button type="button" 
+                                                class="btn btn-outline-secondary btn-sm" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#editDetailModal"
+                                                data-detail-id="{{.ID}}"
+                                                data-detail-name="{{.ChannelName}}"
+                                                data-detail-slackid="{{.ChannelID}}">
+                                            수정
+                                        </button>
+                                        <form action="/channels/details/delete/{{.ID}}" method="POST" onsubmit="return confirm('정말 이 상세 채널(ID: {{.ID}})을 삭제하시겠습니까?');" style="display: inline-block; margin-left: 0.5rem;">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {{else}}
+                                <tr><td colspan="4" class="text-center text-muted">등록된 상세 채널이 없습니다.</td></tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="createGroupModal" tabindex="-1" aria-labelledby="createGroupModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="createGroupModalLabel">새 그룹 생성</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="groupCreateForm" action="/channels/groups" method="POST">
+          <div class="modal-body">
+                <div class="mb-3">
+                    <label for="group_name_modal" class="form-label">그룹 명:</label>
+                    <input type="text" id="group_name_modal" name="group_name" class="form-control" placeholder="예: 1팀" required>
+                </div>
+                <div class="mb-3">
+                    <label for="group_desc_modal" class="form-label">설명 (선택):</label>
+                    <input type="text" id="group_desc_modal" name="group_desc" class="form-control" placeholder="예: 1팀 공지 전용">
+                </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            <button type="submit" class="btn btn-primary" form="groupCreateForm">그룹 생성</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="createDetailModal" tabindex="-1" aria-labelledby="createDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="createDetailModalLabel">새 상세 채널 등록</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="detailCreateForm" action="/channels/details" method="POST">
+          <div class="modal-body">
+                <div class="mb-3">
+                    <label for="channel_name_modal" class="form-label">채널 명:</label>
+                    <input type="text" id="channel_name_modal" name="channel_name" class="form-control" placeholder="예: 1팀 공지" required>
+                </div>
+                <div class="mb-3">
+                    <label for="channel_id_modal" class="form-label">Slack 채널 ID:</label>
+                    <input type="text" id="channel_id_modal" name="channel_id" class="form-control" placeholder="예: C01234ABC" required>
+                </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            <button type="submit" class="btn btn-primary" form="detailCreateForm">채널 등록</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editGroupModal" tabindex="-1" aria-labelledby="editGroupModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="editGroupModalLabel">채널 그룹 수정</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="groupEditForm" action="" method="POST"> <div class="modal-body">
+                <div class="mb-3">
+                    <label for="edit_group_name_modal" class="form-label">그룹 명:</label>
+                    <input type="text" id="edit_group_name_modal" name="group_name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="edit_group_desc_modal" class="form-label">설명 (선택):</label>
+                    <input type="text" id="edit_group_desc_modal" name="group_desc" class="form-control">
+                </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            <button type="submit" class="btn btn-primary" form="groupEditForm">그룹 수정</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="editDetailModal" tabindex="-1" aria-labelledby="editDetailModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="editDetailModalLabel">상세 채널 수정</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="detailEditForm" action="" method="POST"> <div class="modal-body">
+                <div class="mb-3">
+                    <label for="edit_detail_name_modal" class="form-label">채널 명:</label>
+                    <input type="text" id="edit_detail_name_modal" name="channel_name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label for="edit_detail_id_modal" class="form-label">Slack 채널 ID:</label>
+                    <input type="text" id="edit_detail_id_modal" name="channel_id" class="form-control" required>
+                </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            <button type="submit" class="btn btn-primary" form="detailEditForm">채널 수정</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script src="/public/js/channels.js"></script>

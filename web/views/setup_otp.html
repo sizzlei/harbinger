@@ -1,0 +1,51 @@
+<div class="row justify-content-center">
+    <div class="col-lg-6 col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+
+                <h2 class="card-title h3 mb-4">최초 로그인: OTP 등록</h2>
+
+                {{if .Error}}
+                    <div class="alert alert-danger" role="alert">
+                        {{.Error}}
+                    </div>
+                {{end}}
+
+                <p class="text-muted">
+                    계정 보안을 위해 Google Authenticator 앱(또는 호환 앱)을 사용하여 OTP를 등록해야 합니다.
+                </p>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <h4>1. 앱으로 QR 코드 스캔</h4>
+                    <p class="mb-2">
+                        <strong>{{.Email}}</strong> 계정으로 등록됩니다.
+                    </p>
+
+                    <div class="qr-code my-3">
+                        <img src="data:image/png;base64,{{.QRCodeImage}}" alt="OTP QR Code" class="img-fluid border rounded">
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <h4>2. 6자리 인증 코드 입력</h4>
+                <p class="text-muted">
+                    앱에 표시된 6자리 코드를 입력하여 등록을 완료하세요.
+                </p>
+
+                <form action="/auth/setup-otp" method="POST">
+                    <div class="mb-3">
+                        <label for="otp_token" class="form-label">인증 코드 6자리:</label>
+                        <input type="text" id="otp_token" name="otp_token" class="form-control form-control-lg text-center" required maxlength="6" pattern="\d{6}" inputmode="numeric">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">등록 완료</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

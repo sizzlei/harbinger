@@ -1,0 +1,126 @@
+<h2 class="mb-4">관리자: 사용자 관리</h2>
+<p class="lead mb-4">
+    사용자를 승인하거나, 권한(ADMIN/USERS)을 변경합니다.
+</p>
+
+{{if .FlashSuccess}}
+    <div class="alert alert-success" role="alert">
+        {{.FlashSuccess}}
+    </div>
+{{end}}
+{{if .FlashError}}
+    <div class="alert alert-danger" role="alert">
+        {{.FlashError}}
+    </div>
+{{end}}
+
+<ul class="nav nav-tabs" id="adminUserTab" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="pending-tab" data-bs-toggle="tab" data-bs-target="#pending-tab-pane" type="button" role="tab" aria-controls="pending-tab-pane" aria-selected="true">
+            승인 대기 <span class="badge bg-danger ms-1">{{len .PendingUsers}}</span>
+        </button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="verified-tab" data-bs-toggle="tab" data-bs-target="#verified-tab-pane" type="button" role="tab" aria-controls="verified-tab-pane" aria-selected="false">
+            승인된 사용자 <span class="badge bg-secondary ms-1">{{len .VerifiedUsers}}</span>
+        </button>
+    </li>
+</ul>
+
+<div class="tab-content card shadow-sm border-0 border-top-0">
+    
+    <div class="tab-pane fade show active" id="pending-tab-pane" role="tabpanel" aria-labelledby="pending-tab" tabindex="0">
+        <div class="card-body">
+            <h3 class="h5 card-title mb-3">승인 대기 목록</h3>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">이름 / 이메일</th>
+                            <th scope="col">조직</th>
+                            <th scope="col">신청일</th>
+                            <th scope="col" class="text-end">작업</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .PendingUsers}}
+                            <tr>
+                                <td>{{.ID}}</td>
+                                <td>
+                                    <div>{{.UserName}}</div>
+                                    <small class="text-muted">{{.Email}}</small>
+                                </td>
+                                <td>{{if .Organization}}{{.Organization}}{{else}}-{{end}}</td>
+                                <td>{{.CreatedAt.Format "2006-01-02 15:04"}}</td>
+                                <td class="text-end">
+                                    <form action="/admin/approve/{{.ID}}" method="POST" class="inline-form">
+                                        <button type="submit" class="btn btn-primary btn-sm">승인</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {{else}}
+                            <tr><td colspan="5" class="text-center text-muted p-4">현재 승인 대기 중인 사용자가 없습니다.</td></tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="verified-tab-pane" role="tabpanel" aria-labelledby="verified-tab" tabindex="0">
+        <div class="card-body">
+            <h3 class="h5 card-title mb-3">승인된 사용자 목록</h3>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">ID</th>
+                            <th scope="col">이름 / 이메일</th>
+                            <th scope="col">권한 (Role)</th>
+                            <th scope="col">최근 로그인</th>
+                            <th scope="col" class="text-end">권한 변경</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{range .VerifiedUsers}}
+                            <tr>
+                                D<td>{{.ID}}</td>
+                                <td>
+                                    <div>{{.UserName}}</div>
+                                    <small class="text-muted">{{.Email}}</small>
+                                </td>
+                                <td>
+                                    {{if eq .PrivilegesType "ADMIN"}}
+                                        <span class="badge bg-success">ADMIN</span>
+                                    {{else}}
+                                        <span class="badge bg-secondary">USERS</span>
+                                    {{end}}
+                                </td>
+                                <td>
+                                    {{if .LastLoginDt}}
+                                        {{.LastLoginDt.Format "2006-01-02 15:04"}}
+                                    {{else}}
+                                        -
+                                    {{end}}
+                                </td>
+                                <td class="text-end">
+                                    <form action="/admin/privilege" method="POST" class="inline-form d-flex justify-content-end gap-2">
+                                        <input type="hidden" name="user_id" value="{{.ID}}">
+                                        <select name="new_role" class="form-select form-select-sm" style="width: 120px;">
+                                            <option value="USERS" {{if eq .PrivilegesType "USERS"}}selected{{end}}>USERS</option>
+                                            <option value="ADMIN" {{if eq .PrivilegesType "ADMIN"}}selected{{end}}>ADMIN</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-outline-primary btn-sm">변경</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        {{else}}
+                            <tr><td colspan="5" class="text-center text-muted p-4">승인된 사용자가 없습니다.</td></tr>
+                        {{end}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

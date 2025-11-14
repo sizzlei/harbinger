@@ -1,0 +1,103 @@
+<h2 class="mb-4">템플릿 관리</h2>
+<p class="lead mb-4">
+    Slack 공지에 사용될 Block Kit 템플릿을 관리합니다.
+</p>
+
+{{if .FlashSuccess}}
+    <div class="alert alert-success" role="alert">
+        {{.FlashSuccess}}
+    </div>
+{{end}}
+{{if .FlashError}}
+    <div class="alert alert-danger" role="alert">
+        {{.FlashError}}
+    </div>
+{{end}}
+
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3 class="h5 card-title mb-0">등록된 템플릿 ({{len .Templates}}개)</h3>
+                    <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createTemplateModal">
+                        + 새 템플릿 생성
+                    </button>
+                </div>
+                
+                <div class="mb-3">
+                    <input type="text" id="templateSearchInput" class="form-control" placeholder="템플릿 명으로 검색...">
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col" style="width: 5%;">ID</th>
+                                <th scope="col" style="width: 35%;">템플릿 명</th>
+                                <th scope="col">작성자</th> <th scope="col">생성일</th>
+                                <th scope="col" style="width: 20%;">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody id="templateListBody">
+                            {{range .Templates}}
+                                <tr>
+                                    <td>{{.ID}}</td>
+                                    <td><div class="template-name">{{.TemplateName}}</div></td>
+                                    <td>{{.CreatedByName}}</td> <td>{{.CreatedAt.Format "2006-01-02"}}</td>
+                                    
+                                    <td class="action-cell">
+                                        <a href="/templates/edit/{{.ID}}" class="btn btn-outline-primary btn-sm">수정</a>
+                                        
+                                        <form action="/templates/delete/{{.ID}}" method="POST" onsubmit="return confirm('정말 이 템플릿(ID: {{.ID}})을 삭제하시겠습니까?');" class="inline-form">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {{else}}
+                                <tr><td colspan="5" class="text-center text-muted p-4">등록된 템플릿이 없습니다.</td></tr> {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="createTemplateModal" tabindex="-1" aria-labelledby="createTemplateModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="createTemplateModalLabel">새 템플릿 생성</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form id="templateCreateForm" action="/templates" method="POST">
+          <div class="modal-body">
+                <div class="mb-3">
+                    <label for="template_name_modal" class="form-label">템플릿 명:</label>
+                    <input type="text" id="template_name_modal" name="template_name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <label for="template_contents_modal" class="form-label">템플릿 내용 (Slack Block Kit JSON):</label>
+                        <a href="#" id="formatJsonBtnCreate" class="btn btn-link btn-sm p-0 text-decoration-none">JSON 포매팅</a>
+                    </div>
+                    <textarea id="template_contents_modal" name="template_contents" class="form-control" rows="15" placeholder='[{"type": "section", "text": {"type": "mrkdwn", "text": "*<title>* \n <content>"}}]' required></textarea>
+                    <p class="form-text">
+                        변수는, <code>&lt;content&gt;</code>, <code>&lt;refer&gt;</code> 등을 사용하세요.
+                    </p>
+                </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+            <button type="submit" class="btn btn-primary" form="templateCreateForm">템플릿 생성</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+<script src="/public/js/templates.js"></script>

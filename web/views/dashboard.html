@@ -1,0 +1,65 @@
+<h2 class="mb-4">대시보드</h2>
+<p class="lead mb-4">
+    현재 공지 현황을 요약합니다.
+</p>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">활성 공지</h5>
+                <p class="card-text fs-1 fw-bold">{{len .Data.ActiveNotices}} <span class="fs-5 text-muted">건</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">등록된 템플릿</h5>
+                <p class="card-text fs-1 fw-bold">{{.Data.TemplateCount}} <span class="fs-5 text-muted">개</span></p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body text-center">
+                <h5 class="card-title text-muted">채널 그룹</h5>
+                <p class="card-text fs-1 fw-bold">{{.Data.ChannelGroupCount}} <span class="fs-5 text-muted">개</span></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<h3 class="h4 mt-5 mb-3">활성 공지 목록 (종료일이 지나지 않은 공지)</h3>
+<div class="card shadow-sm border-0">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">공지 제목</th>
+                        <th scope="col">작성자</th> <th scope="col">시작일</th>
+                        <th scope="col">종료일</th>
+                        <th scope="col">공지 시간</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Data.ActiveNotices}}
+                        <tr>
+                            <td>{{.ID}}</td>
+                            <td>{{.NoticeTitle}}</td>
+                            <td>{{.CreatedByName}}</td> <td>{{.NoticeStartDe.Format "2006-01-02"}}</td> 
+                            <td>{{.NoticeEndDe.Format "2006-01-02"}}</td>
+                            <td>{{slice .NoticeTime 0 5}}</td> 
+                        </tr>
+                    {{else}}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted p-4">활성화된 공지가 없습니다.</td> </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

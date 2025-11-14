@@ -1,0 +1,43 @@
+<h2 class="mb-4">Slack 봇 수정 (ID: {{.Bot.ID}})</h2>
+<p class="lead mb-4">
+    선택한 봇의 이름과 토큰을 수정합니다.
+</p>
+
+{{if .FlashSuccess}}
+    <div class="alert alert-success" role="alert">
+        {{.FlashSuccess}}
+    </div>
+{{end}}
+{{if .FlashError}}
+    <div class="alert alert-danger" role="alert">
+        {{.FlashError}}
+    </div>
+{{end}}
+
+<div class="row justify-content-center">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4">
+                
+                <form action="/bots/edit/{{.Bot.ID}}" method="POST">
+                    
+                    <div class="mb-3">
+                        <label for="bot_name" class="form-label">봇 이름 (식별용):</label>
+                        <input type="text" id="bot_name" name="bot_name" class="form-control" required value="{{if .Bot.BotName}}{{.Bot.BotName}}{{end}}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bot_token" class="form-label">봇 토큰:</label>
+                        <input type="text" id="bot_token" name="bot_token" class="form-control" placeholder="xoxb-..." required value="{{if .Bot.BotToken}}{{.Bot.BotToken}}{{end}}">
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-3 mt-4">
+                        <a href="/bots" class="btn btn-secondary">목록으로</a>
+                        <button type="submit" class="btn btn-primary">봇 수정</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,40 @@
+<div class="row justify-content-center">
+    <div class="col-lg-5 col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <h2 class="card-title h3 mb-4">회원가입</h2>
+
+                {{if .Error}}
+                    <div class="alert alert-danger" role="alert">
+                        {{.Error}}
+                    </div>
+                {{end}}
+
+                <p class="text-muted mb-4">관리자 승인을 위해 정확한 정보를 입력해 주세요.</p>
+
+                <form action="/auth/register" method="POST">
+                    <div class="mb-3">
+                        <label for="user_name" class="form-label">이름:</label>
+                        <input type="text" id="user_name" name="user_name" class="form-control" required {{if .Form}}value="{{.Form.UserName}}"{{end}}>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">이메일:</label>
+                        <input type="email" id="email" name="email" class="form-control" required {{if .Form}}value="{{.Form.Email}}"{{end}}>
+                    </div>
+                    <div class="mb-3">
+                        <label for="organization" class="form-label">조직 (선택):</label>
+                        <input type="text" id="organization" name="organization" class="form-control" {{if .Form}}value="{{.Form.Organization}}"{{end}}>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">가입 신청</button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <a href="/auth/login" class="text-decoration-none">이미 계정이 있으신가요?</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

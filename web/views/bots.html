@@ -1,0 +1,89 @@
+<h2 class="mb-4">Slack 봇 관리</h2>
+<p class="lead mb-4">
+    공지 발송에 사용할 Slack 봇(토큰)을 관리합니다.
+</p>
+
+{{if .FlashSuccess}}
+    <div class="alert alert-success" role="alert">
+        {{.FlashSuccess}}
+    </div>
+{{end}}
+{{if .FlashError}}
+    <div class="alert alert-danger" role="alert">
+        {{.FlashError}}
+    </div>
+{{end}}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h3 class="h5 card-title mb-3">등록된 봇 ({{len .Bots}}개)</h3>
+                
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">ID</th>
+                                <th scope="col">봇 이름</th>
+                                <th scope="col">작성자</th>
+                                <th scope="col">생성일</th>
+                                <th scope="col" style="width: 20%;">작업</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{range .Bots}}
+                                <tr>
+                                    <td>{{.ID}}</td>
+                                    <td>
+                                        {{if .BotName}}{{.BotName}}{{else}}봇 이름 미정{{end}}
+                                        {{if eq .ID 1}}
+                                            <span class="badge bg-info ms-2">기본 봇</span>
+                                        {{end}}
+                                    </td>
+                                    <td>{{.CreatedByName}}</td>
+                                    <td>{{.CreatedAt.Format "2006-01-02"}}</td>
+                                    
+                                    <td class="action-cell">
+                                        {{if ne .ID 1}}
+                                            <a href="/bots/edit/{{.ID}}" class="btn btn-outline-primary btn-sm">수정</a>
+                                            
+                                            <form action="/bots/delete/{{.ID}}" method="POST" onsubmit="return confirm('정말 이 봇(ID: {{.ID}})을 삭제하시겠습니까? (이 봇을 사용하는 공지가 있으면 실패합니다)');" class="inline-form">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm">삭제</button>
+                                            </form>
+                                        {{else}}
+                                            <span class="text-muted">(시스템 봇)</span>
+                                        {{end}}
+                                    </td>
+                                </tr>
+                            {{else}}
+                                <tr><td colspan="5" class="text-center text-muted p-4">등록된 봇이 없습니다.</td></tr>
+                            {{end}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-body">
+                <h3 class="h5 card-title mb-3">새 봇 등록</h3>
+                <form action="/bots" method="POST">
+                    <div class="mb-3">
+                        <label for="bot_name" class="form-label">봇 이름 (식별용):</label>
+                        <input type="text" id="bot_name" name="bot_name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bot_token" class="form-label">봇 토큰 (xoxb-):</label>
+                        <input type="text" id="bot_token" name="bot_token" class="form-control" placeholder="xoxb-..." required>
+                    </div>
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-primary">봇 등록</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

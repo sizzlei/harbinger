@@ -1,0 +1,77 @@
+/* public/css/style.css */
+
+/* 1. Bootstrap 기본 색상을 '컬리 퍼플'로 덮어쓰기 */
+:root {
+  --bs-primary: #672091; /* 마켓컬리 메인 퍼플 */
+  --bs-primary-rgb: 103, 32, 145;
+  --bs-primary-text-emphasis: #FFFFFF; /* 퍼플 버튼 위의 글자색 (흰색) */
+  --bs-primary-bg-subtle: #F0E9F5;     /* 연한 퍼플 배경 */
+  --bs-primary-border-subtle: #D4BBE5; /* 연한 퍼플 테두리 */
+}
+
+/* 2. 'btn-primary' (메인 버튼) 스타일 정의 */
+.btn-primary {
+  color: #FFFFFF; /* 글자색 흰색 */
+  background-color: #672091;
+  border-color: #672091;
+}
+.btn-primary:hover {
+  color: #FFFFFF;
+  background-color: #561a79; /* 호버 시 조금 더 진한 퍼플 */
+  border-color: #561a79;
+}
+
+/* 3. 'Naver' 스타일: 날카로운(sharp) 모서리 적용 (유지) */
+.card, .form-control, .form-select, .alert, .table, .btn {
+  border-radius: 0.25rem; /* Bootstrap 기본값 (거의 각진) */
+}
+
+/* 4. 헤더(Navbar)가 콘텐츠를 가리지 않도록 상단 여백 추가 */
+body {
+  padding-top: 70px; 
+  background-color: #f8f9fa; /* (유지) 전체 배경을 연한 회색으로 */
+}
+
+/* --- (수정된 부분) --- */
+/* (수정) 테이블 셀의 수직 정렬 강제 */
+.table > tbody > tr > td {
+  vertical-align: middle;
+}
+
+/* (수정) .action-cell에 'justify-content' 추가 */
+.action-cell {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: nowrap; 
+  align-items: center;     /* (수직 중앙 정렬) */
+  /* justify-content: flex-end; */ /* (제거) */
+}
+/* --- (수정 완료) --- */
+
+
+/* (Harbinger 커스텀 스타일) */
+.template-layout, .channel-layout, .notice-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+.inline-form {
+  display: inline;
+}
+/* tr.active 색상을 '퍼플' 틴트로 변경 */
+tr.active {
+  background-color: var(--bs-primary-bg-subtle) !important;
+  font-weight: bold;
+}
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+/* 테스트 발송 섹션 테두리 색상을 '퍼플'로 변경 */
+.test-send-section {
+  padding: 1.5rem;
+  background-color: #ffffff;
+  border-top: 2px solid var(--bs-primary);
+  margin-top: 1.5rem;
+}
