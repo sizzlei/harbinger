@@ -2,11 +2,11 @@
     <div class="col-lg-5 col-md-7">
         <div class="card shadow-sm border-0">
             <div class="card-body p-4 p-md-5">
-                <h2 class="card-title h3 mb-4">회원가입</h2>
+                <h2 class="card-title h3 mb-4 text-center">회원가입</h2>
 
-                {{if .Error}}
+                {{if .FlashError}}
                     <div class="alert alert-danger" role="alert">
-                        {{.Error}}
+                        {{.FlashError}}
                     </div>
                 {{end}}
 

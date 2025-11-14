@@ -13,6 +13,9 @@ import (
 	"github.com/pquerna/otp"
 	"github.com/pquerna/otp/totp"
 	"golang.org/x/sync/errgroup" // (병렬 조회를 위해 임포트)
+
+	"github.com/sizzlei/slack-notificator" // (수정 1: Slack API 호출용)
+	"harbinger/internal/slackbot"
 )
 
 // LoginStatus는 로그인 상태 식별을 위한 상수입니다.
@@ -25,14 +28,23 @@ const (
 	StatusRequiresOtp                          // 3: 일반 로그인 (OTP 인증 필요)
 )
 
-// Service는 'auth' 기능의 비즈니스 로직을 담당합니다.
+// (신규) 시스템 검증을 위한 기본 봇 ID
+const (
+	SystemBotID uint64 = 1
+)
+
+// Service (수정 3: 'slackbotStore' 의존성 추가)
 type Service struct {
-	store *Store
+	store         *Store
+	slackbotStore *slackbot.Store
 }
 
-// NewService는 Store를 받아 새 Service를 생성합니다.
-func NewService(store *Store) *Service {
-	return &Service{store: store}
+// NewService (수정 4: 'slackbotStore' 주입)
+func NewService(store *Store, slackbotStore *slackbot.Store) *Service {
+	return &Service{
+		store:         store,
+		slackbotStore: slackbotStore,
+	}
 }
 
 // RegisterRequest는 핸들러(웹)로부터 받은 가입 요청 데이터입니다.
@@ -42,24 +54,41 @@ type RegisterRequest struct {
 	Organization string
 }
 
-// RegisterUser는 신규 사용자 가입 비즈니스 로직을 처리합니다.
+// RegisterUser (수정 5: Slack 이메일 검증 로직 추가)
 func (s *Service) RegisterUser(req RegisterRequest) error {
+
+	// --- (신규) Slack 이메일 검증 ---
+	botToken, err := s.slackbotStore.GetBotTokenByID(SystemBotID)
+	if err != nil {
+		log.Printf("[ERROR] RegisterUser: 시스템 봇(ID: %d) 토큰 조회 실패: %v", SystemBotID, err)
+		return fmt.Errorf("시스템 봇 설정 오류로 가입을 진행할 수 없습니다.")
+	}
+
+	api := slacknotificator.GetClient(botToken)
+	memberID, err := api.GetMemberId(req.Email)
+
+	if err != nil || memberID == nil {
+		// (slack-notificator가 'user_not_found'일 때 err를 반환한다고 가정)
+		log.Printf("[INFO] RegisterUser: Slack 이메일 검증 실패 (존재하지 않는 사용자): %s", req.Email)
+		return fmt.Errorf("가입 실패: 해당 이메일(%s)은 Slack 워크스페이스에 존재하지 않습니다.", req.Email)
+	}
+
+	log.Printf("[INFO] RegisterUser: Slack 이메일 검증 성공: %s (Slack ID: %s)", req.Email, *memberID)
+	// --- (검증 완료) ---
+
 	// 1. 핸들러로부터 받은 데이터를 DB 모델(User)로 변환
 	newUser := &User{
 		UserName:       req.UserName,
 		Email:          req.Email,
-		PrivilegesType: "USERS", // 신규 가입자 기본 권한
-		VerifyYn:       false,    // 관리자 승인 대기
+		PrivilegesType: "USERS",
+		VerifyYn:       false,
 	}
-
-	// 2. Organization 값이 비어있지 않은 경우에만 포인터 할당
 	if req.Organization != "" {
 		newUser.Organization = &req.Organization
 	}
-	// OtpCode는 기본값(nil)이므로 NULL로 INSERT 됩니다.
 
 	// 3. Store를 호출하여 DB에 저장
-	err := s.store.CreateUser(newUser)
+	err = s.store.CreateUser(newUser)
 	if err != nil {
 		log.Printf("[ERROR] RegisterUser 서비스 에러: %v", err)
 		return err

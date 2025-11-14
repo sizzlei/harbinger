@@ -70,9 +70,12 @@ func main() {
 
 	// --- HSS 조립 ---
 
-	// Auth
+	// (Slackbot 스토어는 Auth 서비스보다 먼저 생성되어야 합니다)
+	slackbotStore := slackbot.NewStore(dbo)
+
+	// Auth (수정)
 	authStore := auth.NewStore(dbo)
-	authService := auth.NewService(authStore)
+	authService := auth.NewService(authStore, slackbotStore) // (slackbotStore 주입)
 	authHandler := auth.NewAuthHandler(authService, sessionStore)
 
 	// Template
@@ -86,7 +89,6 @@ func main() {
 	channelHandler := channel.NewChannelHandler(channelService, sessionStore)
 
 	// Slackbot
-	slackbotStore := slackbot.NewStore(dbo)
 	slackbotService := slackbot.NewService(slackbotStore)
 	slackbotHandler := slackbot.NewSlackbotHandler(slackbotService, sessionStore)
 

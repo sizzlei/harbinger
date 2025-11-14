@@ -18,11 +18,14 @@
     <div class="col-lg-8">
         <div class="card shadow-sm border-0">
             <div class="card-body p-4">
-                <form action="/templates/edit/{{.Template.ID}}" method="POST">
+                
+                <form action="/templates/edit/{{.Template.ID}}" method="POST" id="templateEditForm">
+                    
                     <div class="mb-3">
                         <label for="template_name" class="form-label">템플릿 명:</label>
                         <input type="text" id="template_name" name="template_name" class="form-control" required value="{{.Template.TemplateName}}">
                     </div>
+                    
                     <div class="mb-3">
                         <div class="d-flex justify-content-between">
                             <label for="template_contents" class="form-label">템플릿 내용 (Slack Block Kit JSON):</label>

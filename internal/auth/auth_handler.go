@@ -23,14 +23,15 @@ func NewAuthHandler(service *Service, store *session.Store) *AuthHandler {
 }
 
 // --- [가입] 플로우 ---
-// (HandleShowRegisterPage, HandleRegister, HandleRegisterPending - 변경 없음)
-
+// HandleShowRegisterPage (수정: 플래시 메시지 로직 제거)
 func (h *AuthHandler) HandleShowRegisterPage(c *fiber.Ctx) error {
 	return c.Render("register", fiber.Map{
 		"Title": "Harbinger | 회원가입",
+		// (에러는 POST 핸들러가 직접 전달하므로 FlashError 제거)
 	}, "layout")
 }
 
+// HandleRegister (수정: 에러 발생 시 Render 사용)
 func (h *AuthHandler) HandleRegister(c *fiber.Ctx) error {
 	type registerForm struct {
 		UserName     string `form:"user_name"`
@@ -48,21 +49,28 @@ func (h *AuthHandler) HandleRegister(c *fiber.Ctx) error {
 	}
 	log.Infof("신규 가입 요청 (핸들러): %s", form.Email)
 
+	// 2. 서비스 호출 (Slack 이메일 검증 포함)
 	err := h.service.RegisterUser(RegisterRequest{
 		UserName:     form.UserName,
 		Email:        form.Email,
 		Organization: form.Organization,
 	})
 
+	// (수정) 3. 에러 발생 시, 'Render'를 사용하여 폼 데이터와 에러 메시지 전달
 	if err != nil {
 		log.Warnf("가입 처리 실패: %v", err)
+		// (Redirect 대신 Render 사용)
 		return c.Render("register", fiber.Map{
-			"Title": "Harbinger | 회원가입",
-			"Error": "가입에 실패했습니다. (이메일 중복 등)",
-			"Form":  form,
+			"Title":      "Harbinger | 회원가입",
+			"FlashError": "가입 실패: " + err.Error(), // (에러 메시지 전달)
+			"Form":       form,                       // (입력한 폼 데이터 다시 전달)
 		}, "layout")
 	}
 
+	// (수정) 4. 성공 시 pending 페이지로 이동 (플래시 메시지 사용)
+	sess, _ := h.store.Get(c)
+	sess.Set("flash_success", "가입 신청이 완료되었습니다. 관리자 승인을 기다려주세요.")
+	sess.Save()
 	return c.Redirect("/auth/register/pending")
 }
 
